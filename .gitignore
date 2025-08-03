@@ -1,0 +1,26 @@
+# Node modules
+frontend/node_modules/
+
+# Build outputs
+frontend/build/
+frontend/.svelte-kit/
+frontend/.vite/
+
+# Wails build artifacts
+build/
+dist/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# IDE/editor configs
+.vscode/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Logs and temp files
+*.log
+*.tmp
