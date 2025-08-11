@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { ScanDirectory } from '../../wailsjs/go/main/FileService';
-    import { SelectDirectory } from '../../wailsjs/go/main/DialogService';
+    import { ScanDirectory } from '../../wailsjs/go/services/FileService';
+    import { SelectDirectory } from '../../wailsjs/go/main/App';
 
     let files: string[] = [];
     let selectedDirectory: string = "No directory selected";

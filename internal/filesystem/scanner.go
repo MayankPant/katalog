@@ -2,6 +2,7 @@ package filesystem
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 )
@@ -10,7 +11,7 @@ import (
 
 func ScanDirectory(root string) ([]string, error) {
 	var files []string
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil{
 			if os.IsPermission(err){
 				fmt.Printf("Error reading %s: %v\n", path, err)
@@ -19,7 +20,7 @@ func ScanDirectory(root string) ([]string, error) {
 			fmt.Printf("Error reading %s: %v\n", path, err)
             return nil // still skip
 		}
-		if !info.IsDir(){
+		if !d.IsDir(){
 			files = append(files, path)
 		}
 		return nil

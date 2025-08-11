@@ -1,24 +1,40 @@
 package main
-
 import (
 	"context"
+	"katalog/internal/services"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 type App struct {
 	 ctx	context.Context
-	 FileService *FileService
-	 DialogService *DialogService
+	 FileService *services.FileService
 }
 
 func NewApp() *App {
     app := &App{
-        FileService: NewFileService(),
+        FileService: services.NewFileService(),
     }
-    app.DialogService = NewDialogService(app)
     return app
 }
 
 
-func (a *App) startup(ctx context.Context) {
+func (a *App) Startup(ctx context.Context) {
 	a.ctx = ctx
+}
+
+
+// SelectDirectory opens a dialog to select a directory and returns the path.
+// This method is bindable to the frontend.
+func (a *App) SelectDirectory() (string, error) {
+	// Use the stored context when calling the dialog function.
+	selection, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "Please select your project directory",
+	})
+
+	if err != nil {
+		// This will propagate the error to the frontend if the user cancels.
+		return "", err
+	}
+
+	return selection, nil
 }
