@@ -5,27 +5,60 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
-// recursively scans through directories and shares the filePaths
+const NUM_WORKERS = 10
 
 func ScanDirectory(root string) ([]string, error) {
 	var files []string
-	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
-		if err != nil{
-			if os.IsPermission(err){
-				fmt.Printf("Error reading %s: %v\n", path, err)
-				return nil // skip this directory
+	paths := make(chan string, 100)   // files to process
+	results := make(chan string, 100) // processed files
+
+	var wg sync.WaitGroup
+	wg.Add(NUM_WORKERS)
+
+	// Workers
+	for i := 0; i < NUM_WORKERS; i++ {
+		go func() {
+			defer wg.Done()
+			for path := range paths {
+				// Here you could do processing on the file
+				results <- path
 			}
-			fmt.Printf("Error reading %s: %v\n", path, err)
-            return nil // still skip
-		}
-		if !d.IsDir(){
-			files = append(files, path)
-		}
-		return nil
+		}()
+	}
 
-	})
+	// Walk directory
+	var walkErr error
+	go func() {
+		walkErr = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				if os.IsPermission(err) {
+					fmt.Printf("Permission denied: %s\n", path)
+					return nil
+				}
+				fmt.Printf("Error reading %s: %v\n", path, err)
+				return nil
+			}
+			if !d.IsDir() {
+				paths <- path
+			}
+			return nil
+		})
+		close(paths) // done sending to workers
+	}()
 
-	return files, err
+	// Close results after workers finish
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	// Collect results
+	for file := range results {
+		files = append(files, file)
+	}
+
+	return files, walkErr
 }
