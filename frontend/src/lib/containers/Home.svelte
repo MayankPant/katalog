@@ -1,6 +1,8 @@
 <script lang="ts">
-    import { ScanDirectory } from '../../wailsjs/go/services/FileService';
-    import { SelectDirectory } from '../../wailsjs/go/main/App';
+    import { ScanDirectory } from '../../../wailsjs/go/services/FileService';
+    import { SelectDirectory } from '../../../wailsjs/go/main/App';
+    import { loaderStore } from '../stores/loaderstore';
+  import Loader from '../components/Loader/Loader.svelte';
 
     let files: string[] = [];
     let selectedDirectory: string = "No directory selected";
@@ -17,9 +19,10 @@
 
             selectedDirectory = dir;
             isScanning = true;
+            
             errorMessage = "";
             files = []; // Clear previous results
-
+            loaderStore.set(true);
             const result = await ScanDirectory(dir);
             files = result || [];
 
@@ -29,6 +32,7 @@
             selectedDirectory = "Error scanning directory.";
         } finally {
             isScanning = false;
+            loaderStore.set(false);
         }
     }
 </script>
@@ -41,7 +45,12 @@
 
     <div class="scan-controls">
         <button on:click={chooseDirectory} disabled={isScanning}>
-            {isScanning ? 'Scanning...' : 'Select & Scan Directory'}
+            {#if isScanning}
+                <Loader />
+            {:else}
+                Select Scan Directory
+            {/if}
+
         </button>
         <div class="selected-path">
             <strong>Selected:</strong>

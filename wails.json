@@ -9,5 +9,19 @@
   "author": {
     "name": "Mayank Pant",
     "email": "MPANT4512@GMAIL.COM"
+  },
+  "windows": {
+    "window": {
+      "title": "Katalog",
+      "width": 1024,
+      "height": 768,
+      "minWidth": 800,
+      "minHeight": 600,
+      "resizable": true,
+      "minimizable": true,
+      "maximizable": true,
+      "fullscreen": false,
+      "frameless": false
+    }
   }
 }
