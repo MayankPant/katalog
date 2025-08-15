@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Home from './lib/Home.svelte';
+  import Home from './lib/containers/Home.svelte';
 </script>
 
 <main class="app-container">
