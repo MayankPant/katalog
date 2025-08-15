@@ -19,7 +19,6 @@ func NewApp() *App {
 
 
 func (a *App) Startup(ctx context.Context) {
-	runtime.WindowFullscreen(ctx)
 	a.ctx = ctx
 }
 
