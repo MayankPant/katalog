@@ -30,6 +30,7 @@
             console.error("Error during directory scan:", err);
             errorMessage = `Error: ${err}`;
             selectedDirectory = "Error scanning directory.";
+            loaderStore.set(false);
         } finally {
             isScanning = false;
             loaderStore.set(false);
