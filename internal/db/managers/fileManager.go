@@ -1,12 +1,12 @@
 package managers
 
 import (
-	"time"
 	"database/sql"
 	"fmt"
+	"time"
 )
 
-type Files struct {
+type File struct {
 	ID        int    `json:"id"`
 	Path      string `json:"path"`
 	Hash      string `json:"string"`
@@ -17,6 +17,7 @@ type Files struct {
 
 type FileManager interface {
 	SetupTable() error
+	Insert(files *File) error
 }
 
 type fileManager struct {
@@ -52,4 +53,17 @@ func (m *fileManager) SetupTable() error {
 		return fmt.Errorf("failed to create table: %w", err)
 	}
 	return nil
+}
+func (m *fileManager) Insert(file *File) error {
+	query := fmt.Sprintf(`
+		INSERT INTO %s (
+			path, hash, size, created_at
+		) VALUES (?, ?, ?, ?);
+	`, m.tableName)
+
+	_, err := m.DB.Exec(query, file.Path, file.Hash, file.Size, file.CreatedAt)
+	if err != nil{
+		return fmt.Errorf("failed to insert file: %w", err)
+	}
+	return  nil
 }

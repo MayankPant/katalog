@@ -55,8 +55,9 @@ func ScanDirectory(root string) ([]string, error) {
 		close(results)
 	}()
 
-	// Collect results
+	// Collect results and insert file metadata to the database
 	for file := range results {
+		
 		files = append(files, file)
 	}
 

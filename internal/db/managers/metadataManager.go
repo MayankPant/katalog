@@ -14,6 +14,7 @@ type Metadata struct {
 
 type MetadataManager interface {
 	SetupTable() error
+	Create(metadata *Metadata) error
 }
 
 type metadataManager struct {
@@ -44,6 +45,21 @@ func (m *metadataManager) SetupTable() error {
 	_, err := m.DB.Exec(query)
 	if err != nil {
 		return fmt.Errorf("failed to create table: %w", err)
+	}
+	return nil
+}
+
+func (m *metadataManager) Create(metadata *Metadata) error{
+	query := fmt.Sprintf(`
+
+	INSERT INTO %s (file_id, key, value) VALUES (?, ?, ?)
+	
+	`, m.tableName)
+
+	_, err := m.DB.Exec(query, metadata.FileID, metadata.Key, metadata.Value)
+
+	if err != nil {
+		return fmt.Errorf("failed to create metadata entry: %w", err)
 	}
 	return nil
 }

@@ -12,3 +12,7 @@ func NewFileService() * FileService {
 func (fs *FileService) ScanDirectory(path string)([] string, error){
 	return filesystem.ScanDirectory(path)
 }
+
+func (fs *FileService) GetFileHash(path string)(string, error){
+	
+}
