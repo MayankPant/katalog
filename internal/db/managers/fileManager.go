@@ -9,10 +9,10 @@ import (
 type File struct {
 	ID        int    `json:"id"`
 	Path      string `json:"path"`
-	Hash      string `json:"string"`
+	Hash      string `json:"hash"`
 	Size      int    `json:"size"`
 	CreatedAt time.Time `json:"created_at"`
-	ScannedAt time.Time `json:"scannned_at"`
+	ScannedAt time.Time `json:"scanned_at"`
 }
 
 type FileManager interface {
@@ -55,15 +55,19 @@ func (m *fileManager) SetupTable() error {
 	return nil
 }
 func (m *fileManager) Insert(file *File) error {
-	query := fmt.Sprintf(`
-		INSERT INTO %s (
-			path, hash, size, created_at
-		) VALUES (?, ?, ?, ?);
-	`, m.tableName)
+    fmt.Printf("[FILEMANAGERINSERT] adding file to database.")
+    query := fmt.Sprintf(`
+        INSERT OR IGNORE INTO %s (
+            path, hash, size, scanned_at
+        ) VALUES (?, ?, ?, ?);
+    `, m.tableName)
 
-	_, err := m.DB.Exec(query, file.Path, file.Hash, file.Size, file.CreatedAt)
-	if err != nil{
-		return fmt.Errorf("failed to insert file: %w", err)
-	}
-	return  nil
+	fmt.Printf("\n[INSERT] insertion query: %s\n", query)
+
+    _, err := m.DB.Exec(query, file.Path, file.Hash, file.Size, file.ScannedAt)
+     if err != nil{
+        fmt.Printf("Insert error: %v\n", err) // Add this line for more info
+        return fmt.Errorf("\nfailed to insert file: %w\n", err)
+    }
+    return  nil
 }

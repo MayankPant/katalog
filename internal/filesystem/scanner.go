@@ -6,11 +6,16 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"katalog/internal/services"
 )
+type ScannerService struct{}
 
+func NewScannerService() * ScannerService {
+	return &ScannerService{}
+}
 const NUM_WORKERS = 10
 
-func ScanDirectory(root string) ([]string, error) {
+func (s *ScannerService) ScanDirectory(root string) ([]string, error) {
 	var files []string
 	paths := make(chan string, 100)   // files to process
 	results := make(chan string, 100) // processed files
@@ -57,7 +62,10 @@ func ScanDirectory(root string) ([]string, error) {
 
 	// Collect results and insert file metadata to the database
 	for file := range results {
-		
+		res := services.PersistCurrentFile(file)
+		if !res{
+			fmt.Println("Could not add file")
+		}
 		files = append(files, file)
 	}
 

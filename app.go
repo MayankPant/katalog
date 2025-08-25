@@ -1,18 +1,21 @@
 package main
 import (
 	"context"
-	"katalog/internal/services"
+	"database/sql"
+	"katalog/internal/filesystem"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 type App struct {
-	 ctx	context.Context
-	 FileService *services.FileService
+	 ctx			context.Context
+	 DB				*sql.DB
+	 ScannerService *filesystem.ScannerService
 }
 
-func NewApp() *App {
+func NewApp(db *sql.DB) *App {
     app := &App{
-        FileService: services.NewFileService(),
+        ScannerService: filesystem.NewScannerService(),
+		DB: db,
     }
     return app
 }
