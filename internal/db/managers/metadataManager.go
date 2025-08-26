@@ -3,6 +3,8 @@ package managers
 import (
 	"database/sql"
 	"fmt"
+	"katalog/internal/extractor"
+	"strconv"
 )
 
 type Metadata struct {
@@ -15,6 +17,7 @@ type Metadata struct {
 type MetadataManager interface {
 	SetupTable() error
 	Create(metadata *Metadata) error
+	InsertFileMetadata(file *File, fileMetadata *extractor.FileMetadata) error
 }
 
 type metadataManager struct {
@@ -62,4 +65,50 @@ func (m *metadataManager) Create(metadata *Metadata) error{
 		return fmt.Errorf("failed to create metadata entry: %w", err)
 	}
 	return nil
+}
+
+func (metadataManager *metadataManager) InsertFileMetadata(file *File, fileMetadata *extractor.FileMetadata) error {
+
+	var metadataData []Metadata
+
+	metadataData = append(metadataData, Metadata{
+			FileID: file.ID,
+			Key: "size",
+			Value: strconv.Itoa(int(fileMetadata.Size)),
+		})
+	metadataData = append(metadataData, Metadata{
+			FileID: file.ID,
+			Key: "isDir",
+			Value: strconv.FormatBool(fileMetadata.IsDir),
+		})
+	metadataData = append(metadataData, Metadata{
+			FileID: file.ID,
+			Key: "mode",
+			Value: fileMetadata.Mode.String(),
+		})
+	metadataData = append(metadataData, Metadata{
+			FileID: file.ID,
+			Key: "lastModified",
+			Value: fileMetadata.LastModified.String(),
+		})
+	metadataData = append(metadataData, Metadata{
+			FileID: file.ID,
+			Key: "createdAt",
+			Value: fileMetadata.CreatedAt.String(),
+		})
+	metadataData = append(metadataData, Metadata{
+			FileID: file.ID,
+			Key: "accessedAt",
+			Value: fileMetadata.AccessedAt.String(),
+		})
+
+	for _, value := range(metadataData) {
+		err := metadataManager.Create(&value)
+		if err != nil {
+			fmt.Printf("Metadata insert error: %v\n", err)
+        	return err
+		}
+	}
+	return nil
+	
 }

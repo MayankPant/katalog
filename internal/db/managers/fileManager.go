@@ -10,14 +10,12 @@ type File struct {
 	ID        int    `json:"id"`
 	Path      string `json:"path"`
 	Hash      string `json:"hash"`
-	Size      int    `json:"size"`
 	CreatedAt time.Time `json:"created_at"`
-	ScannedAt time.Time `json:"scanned_at"`
 }
 
 type FileManager interface {
 	SetupTable() error
-	Insert(files *File) error
+	Insert(files *File) (*File, error)
 }
 
 type fileManager struct {
@@ -42,9 +40,7 @@ func (m *fileManager) SetupTable() error {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			path TEXT NOT NULL UNIQUE,
 			hash TEXT NOT NULL,
-			size INTEGER NOT NULL,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			scanned_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		);
 	`, m.tableName)
 
@@ -54,20 +50,35 @@ func (m *fileManager) SetupTable() error {
 	}
 	return nil
 }
-func (m *fileManager) Insert(file *File) error {
-    fmt.Printf("[FILEMANAGERINSERT] adding file to database.")
+func (m *fileManager) Insert(file *File) (*File, error) {
+    fmt.Printf("[FILEMANAGERINSERT] adding file to database.\n")
     query := fmt.Sprintf(`
-        INSERT OR IGNORE INTO %s (
-            path, hash, size, scanned_at
-        ) VALUES (?, ?, ?, ?);
+        INSERT INTO %s (path, hash)
+        VALUES (?, ?)
+        ON CONFLICT(path) DO UPDATE SET
+            hash=excluded.hash
     `, m.tableName)
 
-	fmt.Printf("\n[INSERT] insertion query: %s\n", query)
+    fmt.Printf("\n[INSERT] insertion query: %s\n", query)
 
-    _, err := m.DB.Exec(query, file.Path, file.Hash, file.Size, file.ScannedAt)
-     if err != nil{
-        fmt.Printf("Insert error: %v\n", err) // Add this line for more info
-        return fmt.Errorf("\nfailed to insert file: %w\n", err)
+    _, err := m.DB.Exec(query, file.Path, file.Hash)
+    if err != nil {
+        fmt.Printf("Insert error: %v\n", err)
+        return nil, fmt.Errorf("\nfailed to insert file: %w\n", err)
     }
-    return  nil
+
+    // Query the file back by its unique path
+    selectQuery := fmt.Sprintf(`
+        SELECT id, path, hash, created_at
+        FROM %s
+        WHERE path = ?
+    `, m.tableName)
+
+    row := m.DB.QueryRow(selectQuery, file.Path)
+    var insertedFile File
+    err = row.Scan(&insertedFile.ID, &insertedFile.Path, &insertedFile.Hash, &insertedFile.CreatedAt)
+    if err != nil {
+        return nil, fmt.Errorf("failed to fetch inserted file: %w", err)
+    }
+    return &insertedFile, nil
 }

@@ -8,7 +8,7 @@ import (
 )
 // used to persist files
 func PersistCurrentFile(path string) bool {
-	fmt.Printf("[PERSISTCURRENTFILE] Adding file %s to db.", path)
+	fmt.Printf("[PERSISTCURRENTFILE] Adding file %s to db.\n", path)
 	db := migrations.GetDB()
 	// extract file information and file hash
 	fileInformation, err := extractor.GetFileMetadata(path)
@@ -25,13 +25,23 @@ func PersistCurrentFile(path string) bool {
 
 	// create entries into file table and metadata tables
 	fileManager := managers.NewFileManager(managers.FileManagerParams{DB: db})
-	response := fileManager.Insert(&managers.File{
+	file, err := fileManager.Insert(&managers.File{
 		Path: path,
 		Hash: fileHash,
-		Size: int(fileInformation.Size),
 		CreatedAt: fileInformation.CreatedAt,
-		ScannedAt: fileInformation.AccessedAt,
 	})
+
+	if err != nil {
+		fmt.Printf("[PERSISTCURRENTFILE] file insertion failed: %s.", err)
+		return  false
+	}
+
+	metadataManager := managers.NewMetadataManager(managers.MetadataManagerParams{
+		DB: db,
+	})
+	
+
+	response := metadataManager.InsertFileMetadata(file, fileInformation)
 
 	if response != nil {
 		fmt.Printf("[PERSISTCURRENTFILE] file insertion failed: %s.", err)

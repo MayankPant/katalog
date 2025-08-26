@@ -3,10 +3,11 @@ package filesystem
 import (
 	"fmt"
 	"io/fs"
+	"katalog/internal/excluder"
+	"katalog/internal/services"
 	"os"
 	"path/filepath"
 	"sync"
-	"katalog/internal/services"
 )
 type ScannerService struct{}
 
@@ -37,6 +38,7 @@ func (s *ScannerService) ScanDirectory(root string) ([]string, error) {
 	// Walk directory
 	var walkErr error
 	go func() {
+		excluder := excluder.NewExcluder()
 		walkErr = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
 				if os.IsPermission(err) {
@@ -45,6 +47,11 @@ func (s *ScannerService) ScanDirectory(root string) ([]string, error) {
 				}
 				fmt.Printf("Error reading %s: %v\n", path, err)
 				return nil
+			}
+			// if the current directory is in the excluder we skip it
+			if d.IsDir() && excluder.IsExcluded(path){
+				fmt.Printf("[SCANNER]Ignoring path: %s\n", path)
+				return fs.SkipDir
 			}
 			if !d.IsDir() {
 				paths <- path
