@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ScanDirectory } from '../../../wailsjs/go/services/FileService';
+    import { ScanDirectory } from '../../../wailsjs/go/filesystem/ScannerService';
     import { SelectDirectory } from '../../../wailsjs/go/main/App';
     import { loaderStore } from '../stores/loaderstore';
   import Loader from '../components/Loader/Loader.svelte';
@@ -30,6 +30,7 @@
             console.error("Error during directory scan:", err);
             errorMessage = `Error: ${err}`;
             selectedDirectory = "Error scanning directory.";
+            loaderStore.set(false);
         } finally {
             isScanning = false;
             loaderStore.set(false);
