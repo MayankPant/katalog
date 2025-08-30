@@ -59,8 +59,6 @@ func (m *fileManager) Insert(file *File) (*File, error) {
             hash=excluded.hash
     `, m.tableName)
 
-    fmt.Printf("\n[INSERT] insertion query: %s\n", query)
-
     _, err := m.DB.Exec(query, file.Path, file.Hash)
     if err != nil {
         fmt.Printf("Insert error: %v\n", err)

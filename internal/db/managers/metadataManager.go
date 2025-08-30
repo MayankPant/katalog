@@ -43,6 +43,7 @@ func (m *metadataManager) SetupTable() error {
 		key TEXT NOT NULL,
 		value TEXT,
 		FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE
+		UNIQUE(file_id, key)
 	);`, m.tableName)
 
 	_, err := m.DB.Exec(query)
@@ -56,13 +57,15 @@ func (m *metadataManager) Create(metadata *Metadata) error{
 	query := fmt.Sprintf(`
 
 	INSERT INTO %s (file_id, key, value) VALUES (?, ?, ?)
+	ON CONFLICT(file_id, key) DO UPDATE SET
+	value = excluded.value
 	
 	`, m.tableName)
 
 	_, err := m.DB.Exec(query, metadata.FileID, metadata.Key, metadata.Value)
 
 	if err != nil {
-		return fmt.Errorf("failed to create metadata entry: %w", err)
+		return fmt.Errorf("[METADATAINSERT] failed to create metadata entry: %w", err)
 	}
 	return nil
 }
